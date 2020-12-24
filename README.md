@@ -1,5 +1,6 @@
 # SimpleTextAnalyzer
 [![Build Status](https://travis-ci.com/timerke/SimpleTextAnalyzer.svg?branch=main)](https://travis-ci.com/timerke/SimpleTextAnalyzer)
+
 Приложение на Си для простого анализа текстового файла
 ## Задание 
 Разработать программу анализа текстового файла. Программа должна считывать файл с текстом и проводить его частотный анализ. Результаты работы программы должны сохраняться в файл. 
