@@ -2,6 +2,8 @@
 #ifndef TEXT_ANALYZER_H
 #define TEXT_ANALYZER_H
 
+#include <stdbool.h>
+#include "new_types.h"
 #define N 100
 #define WORD_LENGTH 30
 
