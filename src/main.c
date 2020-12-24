@@ -1,5 +1,4 @@
-﻿#include <iostream>
-#include "text_analyzer.h"
+﻿#include "text_analyzer.h"
 
 int main()
 {

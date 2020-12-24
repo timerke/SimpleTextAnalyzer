@@ -2,7 +2,6 @@
 Модуль содержит определения функций для анализа текста.
 */
 
-#include <iostream>
 #include <stdio.h>
 #include "text_analyzer.h"
 
