@@ -13,10 +13,11 @@
  * @param n: количество записанных элементов в массиве;
  * @param c: добавляемый символ.
  */
-void add_symbol(Symbol* symbols, unsigned int& n_max, unsigned int& n, char c)
+void add_symbol(struct Symbol* symbols, unsigned int* n_max, unsigned int* n,
+	char c)
 {
 	// Проверяем, записан ли символ в массив
-	for (unsigned int i = 0; i < n; i++)
+	for (unsigned int i = 0; i < *n; i++)
 	{
 		if (symbols[i].s == c)
 		{
@@ -26,12 +27,12 @@ void add_symbol(Symbol* symbols, unsigned int& n_max, unsigned int& n, char c)
 		}
 	}
 	// Символ еще не записан
-	if (n == n_max)
+	if (*n == *n_max)
 	{
 		// В массиве нет свободных мест, нужно добавить места
-		n_max += N;
-		Symbol* new_symbols = new Symbol[n_max];
-		for (unsigned int i = 0; i < n; i++)
+		(*n_max) += N;
+		struct Symbol* new_symbols = new struct Symbol[*n_max];
+		for (unsigned int i = 0; i < *n; i++)
 		{
 			new_symbols[i].s = symbols[i].s;
 			new_symbols[i].n = symbols[i].n;
@@ -40,7 +41,7 @@ void add_symbol(Symbol* symbols, unsigned int& n_max, unsigned int& n, char c)
 	}
 	symbols[n].s = c;
 	symbols[n].n = 1;
-	n++;
+	(*n)++;
 }
 
 /**
@@ -51,11 +52,11 @@ void add_symbol(Symbol* symbols, unsigned int& n_max, unsigned int& n, char c)
  * @param word: добавляемое слово;
  * @param n: количество символов в добавляемом слове.
  */
-void add_word(Word* words, unsigned int& n_words_max, unsigned int& n_words,
-	char* word, unsigned int n)
+void add_word(struct Word* words, unsigned int* n_words_max,
+	unsigned int* n_words,	char* word, unsigned int n)
 {
 	// Проверяем, записано ли слово в массив
-	for (unsigned int i = 0; i < n_words; i++)
+	for (unsigned int i = 0; i < *n_words; i++)
 	{
 		if (words[i].length != n)
 			// Добавляемое слово не совпадает со словом из массива по длине
@@ -79,12 +80,12 @@ void add_word(Word* words, unsigned int& n_words_max, unsigned int& n_words,
 		}
 	}
 	// Слово пока не записано в массив
-	if (n_words == n_words_max)
+	if (*n_words == *n_words_max)
 	{
 		// В массиве нет свободных мест, нужно добавить места
-		n_words_max += N;
-		Word* new_words = new Word[n_words_max];
-		for (unsigned int i = 0; i < n_words; i++)
+		(*n_words_max) += N;
+		struct Word* new_words = new struct Word[*n_words_max];
+		for (unsigned int i = 0; i < *n_words; i++)
 		{
 			for (unsigned int j = 0; j < words[i].length; j++)
 				new_words[i].word[j] = words[i].word[j];
@@ -96,10 +97,10 @@ void add_word(Word* words, unsigned int& n_words_max, unsigned int& n_words,
 	// Добавляем слово
 	for (unsigned int i = 0; i < n; i++)
 		words[n_words].word[i] = word[i];
-	words[n_words].word[n] = '\0';
-	words[n_words].length = n;
-	words[n_words].n = 1;
-	n_words++;
+	words[*n_words].word[n] = '\0';
+	words[*n_words].length = n;
+	words[*n_words].n = 1;
+	(*n_words)++;
 }
 
 /**
@@ -118,11 +119,11 @@ void analyze_text(const char* filename)
 	char c; // переменная для прочтенного символа из текста
 	char previous_c; // переменная для предыдущего символа
 	// Массив символов из текста
-	Symbol* symbols = new Symbol[N];
+	struct Symbol* symbols = new struct Symbol[N];
 	unsigned int n_sym_max = N;
 	unsigned int n_sym = 0;
 	// Массив слов из текста
-	Word* words = new Word[N];
+	struct Word* words = new struct Word[N];
 	unsigned int n_words_max = N;
 	unsigned int n_words = 0;
 	// Переменная для слов из текста
@@ -137,12 +138,12 @@ void analyze_text(const char* filename)
 	while ((c = fgetc(file)) != EOF)
 	{
 		// Добавляем символ
-		add_symbol(symbols, n_sym_max, n_sym, c);
+		add_symbol(symbols, &n_sym_max, &n_sym, c);
 		// Работаем со словами
 		if (check_delimiter(c) && !check_delimiter(previous_c))
 		{
 			// Добавляем слово
-			add_word(words, n_words_max, n_words, word, n);
+			add_word(words, &n_words_max, &n_words, word, n);
 			n = 0;
 		}
 		else if (!check_delimiter(c))
@@ -189,7 +190,7 @@ void analyze_text(const char* filename)
  * @param words: массив слов;
  * @param n: количество записанных элементов в массиве.
  */
-void calculate_frequencies(Word* words, unsigned int n)
+void calculate_frequencies(struct Word* words, unsigned int n)
 {
 	// Вычисляем общее количество слов в тексте
 	double total = 0;
@@ -232,7 +233,7 @@ bool check_space(char c)
  * @param symbols: массив символов;
  * @param n: количество записанных элементов в массиве.
  */
-void show_symbols(Symbol* symbols, unsigned int n)
+void show_symbols(struct Symbol* symbols, unsigned int n)
 {
 	std::cout << "\nСимволы из текста:\n";
 	for (unsigned int i = 0; i < n; i++)
@@ -254,7 +255,7 @@ void show_symbols(Symbol* symbols, unsigned int n)
  * @param words: массив слов;
  * @param n: количество записанных элементов в массиве.
  */
-void show_words(Word* words, unsigned int n)
+void show_words(struct Word* words, unsigned int n)
 {
 	std::cout << "\nСлова из текста:\n";
 	for (unsigned int i = 0; i < n; i++)
