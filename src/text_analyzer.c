@@ -33,7 +33,7 @@ void add_symbol(struct Symbol* symbols, unsigned int* n_max, unsigned int* n,
 	{
 		// В массиве нет свободных мест, нужно добавить места
 		(*n_max) += N;
-		struct Symbol* new_symbols = (struct Symbol*)malloc(n_max * sizeof(struct Symbol));
+		struct Symbol* new_symbols = (struct Symbol*)malloc(*n_max * sizeof(struct Symbol));
 		for (unsigned int i = 0; i < *n; i++)
 		{
 			new_symbols[i].s = symbols[i].s;
@@ -88,7 +88,7 @@ void add_word(struct Word* words, unsigned int* n_words_max,
 	{
 		// В массиве нет свободных мест, нужно добавить места
 		(*n_words_max) += N;
-		struct Word* new_words = (struct Word*)malloc(n_words_max * sizeof(struct Word));
+		struct Word* new_words = (struct Word*)malloc(*n_words_max * sizeof(struct Word));
 		for (unsigned int i = 0; i < *n_words; i++)
 		{
 			for (unsigned int j = 0; j < words[i].length; j++)
@@ -102,7 +102,7 @@ void add_word(struct Word* words, unsigned int* n_words_max,
 	}
 	// Добавляем слово
 	for (unsigned int i = 0; i < n; i++)
-		words[n_words].word[i] = word[i];
+		words[*n_words].word[i] = word[i];
 	words[*n_words].word[n] = '\0';
 	words[*n_words].length = n;
 	words[*n_words].f = -1.0;
@@ -184,7 +184,7 @@ void analyze_text(const char* filename)
 	// Выводим на экран результаты анализа
 	show_symbols(symbols, n_sym);
 	show_words(words, n_words);
-	printf"\nКоличество предложений: %d.\n", sentences);
+	printf("\nКоличество предложений: %d.\n", sentences);
 	printf("Количество абзацев: %d.\n", paragraphs);
 	// Освобождаем память
 	free(symbols);
