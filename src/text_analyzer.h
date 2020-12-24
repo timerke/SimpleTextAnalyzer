@@ -2,30 +2,8 @@
 #ifndef TEXT_ANALYZER_H
 #define TEXT_ANALYZER_H
 
-// Постоянные
-const unsigned int N = 100;
-const unsigned int WORD_LENGTH = 30;
-
-/**
- * Структура для хранения символа и количества его появлений.
- */
-struct Symbol
-{
-	char s; // символ
-	unsigned int n; // количество
-};
-
-/**
- * Структура для хранения слова и количества его появлений. Принято, что
- * в слове не может быть больше WORD_LENGTH символов.
- */
-struct Word
-{
-	char word[WORD_LENGTH]; // слово
-	double f = -1.0; // частота
-	unsigned int length; // длина слова
-	unsigned int n; // количество
-};
+#define N 100
+#define WORD_LENGTH 30
 
 // Функция добавляет символ в массив символов
 void add_symbol(Symbol*, unsigned int&, unsigned int&, char);
