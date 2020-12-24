@@ -1,4 +1,8 @@
-﻿#pragma once
+﻿/*
+Модуль с определением дополнительных типов-структур.
+*/
+
+#pragma once
 #ifndef NEW_TYPES_H
 #define NEW_TYPES_H
 
@@ -10,6 +14,7 @@
 struct Symbol
 {
 	char s; // символ
+	double f; // частота
 	unsigned int n; // количество
 };
 

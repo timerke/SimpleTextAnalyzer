@@ -15,36 +15,39 @@
  * @param n: количество записанных элементов в массиве;
  * @param c: добавляемый символ.
  */
-void add_symbol(struct Symbol* symbols, unsigned int* n_max, unsigned int* n,
+void add_symbol(struct Symbol** symbols, unsigned int* n_max, unsigned int* n,
 	char c)
 {
 	// Проверяем, записан ли символ в массив
-	for (unsigned int i = 0; i < *n; i++)
+	for (unsigned int i = 0; i < (*n); i++)
 	{
-		if (symbols[i].s == c)
+		if ((*symbols)[i].s == c)
 		{
 			// Символ уже записан, увеличиваем количество
-			symbols[i].n++;
+			(*symbols)[i].n++;
 			return;
 		}
 	}
 	// Символ еще не записан
-	if (*n == *n_max)
+	if ((*n) == (*n_max))
 	{
 		// В массиве нет свободных мест, нужно добавить места
 		(*n_max) += N;
-		struct Symbol* new_symbols = (struct Symbol*)malloc(*n_max * sizeof(struct Symbol));
-		for (unsigned int i = 0; i < *n; i++)
+		size_t size = (*n_max) * sizeof(struct Symbol);
+		struct Symbol* new_symbols = (struct Symbol*)malloc(size);
+		for (unsigned int i = 0; i < (*n); i++)
 		{
-			new_symbols[i].s = symbols[i].s;
-			new_symbols[i].n = symbols[i].n;
+			new_symbols[i].s = (*symbols)[i].s;
+			new_symbols[i].f = (*symbols)[i].f;
+			new_symbols[i].n = (*symbols)[i].n;
 		}
 		// Освобождаем память и получаем указатель на новую
-		free(symbols);
-		symbols = new_symbols;
+		free(*symbols);
+		*symbols = new_symbols;
 	}
-	symbols[*n].s = c;
-	symbols[*n].n = 1;
+	(*symbols)[*n].s = c;
+	(*symbols)[*n].f = -1.0;
+	(*symbols)[*n].n = 1;
 	(*n)++;
 }
 
@@ -56,20 +59,20 @@ void add_symbol(struct Symbol* symbols, unsigned int* n_max, unsigned int* n,
  * @param word: добавляемое слово;
  * @param n: количество символов в добавляемом слове.
  */
-void add_word(struct Word* words, unsigned int* n_words_max,
-	unsigned int* n_words,	char* word, unsigned int n)
+void add_word(struct Word** words, unsigned int* n_words_max,
+	unsigned int* n_words, char* word, unsigned int n)
 {
 	// Проверяем, записано ли слово в массив
 	for (unsigned int i = 0; i < *n_words; i++)
 	{
-		if (words[i].length != n)
+		if ((*words)[i].length != n)
 			// Добавляемое слово не совпадает со словом из массива по длине
 			continue;
 		// Слова по длине совпадают
 		bool is_equal = true;
 		for (unsigned int j = 0; j < n; j++)
 		{
-			if (words[i].word[j] != word[j])
+			if ((*words)[i].word[j] != word[j])
 			{
 				// Слова отличаются
 				is_equal = false;
@@ -79,7 +82,7 @@ void add_word(struct Word* words, unsigned int* n_words_max,
 		if (is_equal)
 		{
 			// Слово уже добавлено в массив, увеличиваем количество
-			words[i].n++;
+			(*words)[i].n++;
 			return;
 		}
 	}
@@ -88,25 +91,31 @@ void add_word(struct Word* words, unsigned int* n_words_max,
 	{
 		// В массиве нет свободных мест, нужно добавить места
 		(*n_words_max) += N;
-		struct Word* new_words = (struct Word*)malloc(*n_words_max * sizeof(struct Word));
+		size_t size = (*n_words_max) * sizeof(struct Word);
+		struct Word* new_words = (struct Word*)malloc(size);
 		for (unsigned int i = 0; i < *n_words; i++)
 		{
-			for (unsigned int j = 0; j < words[i].length; j++)
-				new_words[i].word[j] = words[i].word[j];
-			new_words[i].length = words[i].length;
-			new_words[i].n = words[i].n;
+			for (unsigned int j = 0; j < (*words)[i].length; j++)
+				new_words[i].word[j] = (*words)[i].word[j];
+			if ((*words)[i].length < WORD_LENGTH)
+				new_words[i].word[(*words)[i].length] = '\0';
+			new_words[i].length = (*words)[i].length;
+			new_words[i].n = (*words)[i].n;
 		}
 		// Освобождаем память и получаем указатель на новую
-		free(words);
-		words = new_words;
+		free(*words);
+		*words = new_words;
 	}
-	// Добавляем слово
-	for (unsigned int i = 0; i < n; i++)
-		words[*n_words].word[i] = word[i];
-	words[*n_words].word[n] = '\0';
-	words[*n_words].length = n;
-	words[*n_words].f = -1.0;
-	words[*n_words].n = 1;
+	// Добавляем слово. Учитываем, что максимальная длина слова WORD_LENGTH
+	unsigned int length = n < WORD_LENGTH ? n : WORD_LENGTH;
+	for (unsigned int i = 0; i < length; i++)
+		(*words)[*n_words].word[i] = word[i];
+	// Если есть свободное место в слове, добавляем символ конца строки
+	if (length < WORD_LENGTH)
+		(*words)[*n_words].word[length] = '\0';
+	(*words)[*n_words].length = length;
+	(*words)[*n_words].f = -1.0;
+	(*words)[*n_words].n = 1;
 	(*n_words)++;
 }
 
@@ -125,11 +134,13 @@ void analyze_text(const char* filename)
 	char c; // переменная для прочтенного символа из текста
 	char previous_c; // переменная для предыдущего символа
 	// Массив символов из текста
-	struct Symbol* symbols = (struct Symbol*)malloc(N * sizeof(struct Symbol));
+	size_t size = N * sizeof(struct Symbol);
+	struct Symbol* symbols = (struct Symbol*)malloc(size);
 	unsigned int n_sym_max = N;
 	unsigned int n_sym = 0;
 	// Массив слов из текста
-	struct Word* words = (struct Word*)malloc(N * sizeof(struct Word));
+	size = N * sizeof(struct Word);
+	struct Word* words = (struct Word*)malloc(size);
 	unsigned int n_words_max = N;
 	unsigned int n_words = 0;
 	// Переменная для слов из текста
@@ -144,12 +155,12 @@ void analyze_text(const char* filename)
 	while ((c = fgetc(file)) != EOF)
 	{
 		// Добавляем символ
-		add_symbol(symbols, &n_sym_max, &n_sym, c);
+		add_symbol(&symbols, &n_sym_max, &n_sym, c);
 		// Работаем со словами
 		if (check_delimiter(c) && !check_delimiter(previous_c))
 		{
 			// Добавляем слово
-			add_word(words, &n_words_max, &n_words, word, n);
+			add_word(&words, &n_words_max, &n_words, word, n);
 			n = 0;
 		}
 		else if (!check_delimiter(c))
@@ -179,32 +190,66 @@ void analyze_text(const char* filename)
 		paragraphs++;
 	// Закрываем файл
 	fclose(file);
+	// Вычисляем частоту появления символов
+	calculate_symbols_frequencies(symbols, n_sym);
+	// Вычисляем полное количество слов
+	unsigned int total_words = calculate_words(words, n_words);
 	// Вычисляем частоту появления слов
-	calculate_frequencies(words, n_words);
-	// Выводим на экран результаты анализа
-	show_symbols(symbols, n_sym);
-	show_words(words, n_words);
-	printf("\nКоличество предложений: %d.\n", sentences);
-	printf("Количество абзацев: %d.\n", paragraphs);
+	calculate_words_frequencies(words, n_words);
+	// Выводим информацию
+	show_info(paragraphs, sentences, total_words, symbols, n_sym, words, n_words);
 	// Освобождаем память
 	free(symbols);
 	free(words);
 }
 
 /**
- * Функция вычисляет частоту по предложений.
- * @param words: массив слов;
+ * Функция вычисляет частоту символов.
+ * @param symbols: массив символов;
  * @param n: количество записанных элементов в массиве.
  */
-void calculate_frequencies(struct Word* words, unsigned int n)
+void calculate_symbols_frequencies(struct Symbol* symbols, unsigned int n)
 {
-	// Вычисляем общее количество слов в тексте
+	// Вычисляем полное количество символов
+	unsigned int total = 0;
+	for (unsigned int i = 0; i < n; i++)
+		total += symbols[i].n;
+	// Вычисляем частоту появляения символов в тексте
+	for (unsigned int i = 0; i < n; i++)
+		symbols[i].f = 1.0 * symbols[i].n / total;
+}
+
+/**
+ * Функция вычисляет частоту слов.
+ * @param words: массив слов;
+ * @param n: количество записанных элементов в массиве;
+ * @param n_words: полное количество слов в тексте.
+ */
+void calculate_words_frequencies(struct Word* words, unsigned int n,
+	unsigned int n_words)
+{
+	if (n_words == 0)
+	{
+		// В функцию не было передано количество слов, вычисляем сами
+		n_words = calculate_words(words, n);
+	}
+	// Вычисляем частоту появляения слов в тексте
+	for (unsigned int i = 0; i < n; i++)
+		words[i].f = 1.0 * words[i].n / n_words;
+}
+
+/**
+ * Функция вычисляет количество слов в тексте.
+ * @param words: массив слов;
+ * @param n: количество записанных элементов в массиве.
+ * @return: количество слов.
+ */
+unsigned int calculate_words(struct Word* words, unsigned int n)
+{
 	double total = 0;
 	for (unsigned int i = 0; i < n; i++)
 		total += words[i].n;
-	// Вычисляем частоту появляения слов тексте
-	for (unsigned int i = 0; i < n; i++)
-		words[i].f = words[i].n / total;
+	return total;
 }
 
 /**
@@ -235,6 +280,32 @@ bool check_space(char c)
 }
 
 /**
+ * Функция выводит на экран информацию об анализе текста.
+ * @param paragraphs: количество абзацев;
+ * @param sentences: количество предложений;
+ * @param total_words: полное количество слов;
+ * @param s: массив символов;
+ * @param n_s: количество записанных элементов в массиве символов;
+ * @param w: массив слов;
+ * @param n_w: количество записанных элементов в массиве слов.
+ */
+void show_info(unsigned int paragraphs, unsigned int sentences,
+	unsigned int total_words, struct Symbol* s, unsigned int n_s,
+	struct Word* w, unsigned int n_w)
+{
+	// Общая информация
+	printf("\nОбщая информация:\n");
+	printf("\tКоличество абзацев: %d.\n", paragraphs);
+	printf("\tКоличество предложений: %d.\n", sentences);
+	printf("\tКоличество слов: %d, среднее количество слов в предложении: %.3f.\n",
+		total_words, 1.0 * total_words / sentences);
+	// Информация о символах
+	show_symbols(s, n_s);
+	// Информация о словах
+	show_words(w, n_w);
+}
+
+/**
  * Функция выводит на экран информацию о символах.
  * @param symbols: массив символов;
  * @param n: количество записанных элементов в массиве.
@@ -242,17 +313,21 @@ bool check_space(char c)
 void show_symbols(struct Symbol* symbols, unsigned int n)
 {
 	printf("\nСимволы из текста:\n");
+	printf("\tсимвол\tколичество\tчастота\n");
 	for (unsigned int i = 0; i < n; i++)
 	{
 		if (symbols[i].s == '\n')
-			printf("\\n");
+			printf("\t\\n");
 		else if (symbols[i].s == '\t')
-			printf("\\t");
+			printf("\t\\t");
 		else if (symbols[i].s == ' ')
-			printf("' '");
+			printf("\t' '");
 		else
-			printf("%c", symbols[i].s);
-		printf(" - %d\n", symbols[i].n);
+			printf("\t%c", symbols[i].s);
+		printf("\t%d", symbols[i].n);
+		if (symbols[i].f != -1.0)
+			printf("\t%.4f", symbols[i].f);
+		printf("\n");
 	}
 }
 
@@ -264,11 +339,12 @@ void show_symbols(struct Symbol* symbols, unsigned int n)
 void show_words(struct Word* words, unsigned int n)
 {
 	printf("\nСлова из текста:\n");
+	printf("\tслово\tколичество\tчастота\n");
 	for (unsigned int i = 0; i < n; i++)
 	{
-		printf("%s - %d", words[i].word, words[i].n);
+		printf("\t%s\t%d", words[i].word, words[i].n);
 		if (words[i].f != -1.0)
-			printf(" - %f", words[i].f);
+			printf("\t%.4f", words[i].f);
 		printf("\n");
 	}
 }

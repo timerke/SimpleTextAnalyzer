@@ -1,4 +1,8 @@
-﻿#pragma once
+﻿/*
+Модуль с объявлениями функций, используемых для анализа текста.
+*/
+
+#pragma once
 #ifndef TEXT_ANALYZER_H
 #define TEXT_ANALYZER_H
 
@@ -8,16 +12,23 @@
 #define WORD_LENGTH 30
 
 // Функция добавляет символ в массив символов
-void add_symbol(struct Symbol*, unsigned int*, unsigned int*, char);
+void add_symbol(struct Symbol**, unsigned int*, unsigned int*, char);
 
 // Функция добавляет слово в массив слов
-void add_word(struct Word*, unsigned int*, unsigned int*, char*, unsigned int);
+void add_word(struct Word**, unsigned int*, unsigned int*, char*, unsigned int);
 
 // Функция анализирует текст из файла
 void analyze_text(const char*);
 
-// Функция вычисляет частоту по предложений
-void calculate_frequencies(struct Word*, unsigned int);
+// Функция вычисляет частоту символов
+void calculate_symbols_frequencies(struct Symbol*, unsigned int);
+
+// Функция вычисляет частоту слов
+void calculate_words_frequencies(struct Word*, unsigned int,
+	unsigned int n_words = 0);
+
+// Функция вычисляет количество слов в тексте
+unsigned int calculate_words(struct Word*, unsigned int);
 
 // Функция проверяет, является ли символ разделителем
 bool check_delimiter(char);
@@ -25,6 +36,10 @@ bool check_delimiter(char);
 // Функция проверяет, является ли символ пробелом, табуляцией или переносом
 // строки
 bool check_space(char);
+
+// Функция выводит на экран информацию об анализе текста
+void show_info(unsigned int, unsigned int, unsigned int, struct Symbol*,
+	unsigned int, struct Word*, unsigned int);
 
 // Функция выводит на экран информацию о символах
 void show_symbols(struct Symbol*, unsigned int);

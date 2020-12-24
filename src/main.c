@@ -2,5 +2,5 @@
 
 int main()
 {
-    analyze_text("data/text.txt");
+	analyze_text("text.txt");
 }
