@@ -2,7 +2,9 @@
 Модуль содержит определения функций для анализа текста.
 */
 
+#include <malloc.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "text_analyzer.h"
 
 
@@ -31,16 +33,18 @@ void add_symbol(struct Symbol* symbols, unsigned int* n_max, unsigned int* n,
 	{
 		// В массиве нет свободных мест, нужно добавить места
 		(*n_max) += N;
-		struct Symbol* new_symbols = new struct Symbol[*n_max];
+		struct Symbol* new_symbols = (struct Symbol*)malloc(n_max * sizeof(struct Symbol));
 		for (unsigned int i = 0; i < *n; i++)
 		{
 			new_symbols[i].s = symbols[i].s;
 			new_symbols[i].n = symbols[i].n;
 		}
-		delete[]symbols;
+		// Освобождаем память и получаем указатель на новую
+		free(symbols);
+		symbols = new_symbols;
 	}
-	symbols[n].s = c;
-	symbols[n].n = 1;
+	symbols[*n].s = c;
+	symbols[*n].n = 1;
 	(*n)++;
 }
 
@@ -84,7 +88,7 @@ void add_word(struct Word* words, unsigned int* n_words_max,
 	{
 		// В массиве нет свободных мест, нужно добавить места
 		(*n_words_max) += N;
-		struct Word* new_words = new struct Word[*n_words_max];
+		struct Word* new_words = (struct Word*)malloc(n_words_max * sizeof(struct Word));
 		for (unsigned int i = 0; i < *n_words; i++)
 		{
 			for (unsigned int j = 0; j < words[i].length; j++)
@@ -92,13 +96,16 @@ void add_word(struct Word* words, unsigned int* n_words_max,
 			new_words[i].length = words[i].length;
 			new_words[i].n = words[i].n;
 		}
-		delete[]words;
+		// Освобождаем память и получаем указатель на новую
+		free(words);
+		words = new_words;
 	}
 	// Добавляем слово
 	for (unsigned int i = 0; i < n; i++)
 		words[n_words].word[i] = word[i];
 	words[*n_words].word[n] = '\0';
 	words[*n_words].length = n;
+	words[*n_words].f = -1.0;
 	words[*n_words].n = 1;
 	(*n_words)++;
 }
@@ -109,7 +116,6 @@ void add_word(struct Word* words, unsigned int* n_words_max,
  */
 void analyze_text(const char* filename)
 {
-	setlocale(LC_ALL, "Rus");
 	// Открываем файл с текстом
 	FILE* file = fopen(filename, "r");
 	if (file == NULL)
@@ -119,11 +125,11 @@ void analyze_text(const char* filename)
 	char c; // переменная для прочтенного символа из текста
 	char previous_c; // переменная для предыдущего символа
 	// Массив символов из текста
-	struct Symbol* symbols = new struct Symbol[N];
+	struct Symbol* symbols = (struct Symbol*)malloc(N * sizeof(struct Symbol));
 	unsigned int n_sym_max = N;
 	unsigned int n_sym = 0;
 	// Массив слов из текста
-	struct Word* words = new struct Word[N];
+	struct Word* words = (struct Word*)malloc(N * sizeof(struct Word));
 	unsigned int n_words_max = N;
 	unsigned int n_words = 0;
 	// Переменная для слов из текста
@@ -178,11 +184,11 @@ void analyze_text(const char* filename)
 	// Выводим на экран результаты анализа
 	show_symbols(symbols, n_sym);
 	show_words(words, n_words);
-	std::cout << "\nКоличество предложений: " << sentences << ".\n";
-	std::cout << "Количество абзацев: " << paragraphs << ".\n";
+	printf"\nКоличество предложений: %d.\n", sentences);
+	printf("Количество абзацев: %d.\n", paragraphs);
 	// Освобождаем память
-	delete[]symbols;
-	delete[]words;
+	free(symbols);
+	free(words);
 }
 
 /**
@@ -235,18 +241,18 @@ bool check_space(char c)
  */
 void show_symbols(struct Symbol* symbols, unsigned int n)
 {
-	std::cout << "\nСимволы из текста:\n";
+	printf("\nСимволы из текста:\n");
 	for (unsigned int i = 0; i < n; i++)
 	{
 		if (symbols[i].s == '\n')
-			std::cout << "\\n";
+			printf("\\n");
 		else if (symbols[i].s == '\t')
-			std::cout << "\\t";
+			printf("\\t");
 		else if (symbols[i].s == ' ')
-			std::cout << "' '";
+			printf("' '");
 		else
-			std::cout << symbols[i].s;
-		std::cout << " - " << symbols[i].n << "\n";
+			printf("%c", symbols[i].s);
+		printf(" - %d\n", symbols[i].n);
 	}
 }
 
@@ -257,12 +263,12 @@ void show_symbols(struct Symbol* symbols, unsigned int n)
  */
 void show_words(struct Word* words, unsigned int n)
 {
-	std::cout << "\nСлова из текста:\n";
+	printf("\nСлова из текста:\n");
 	for (unsigned int i = 0; i < n; i++)
 	{
-		std::cout << words[i].word << " - " << words[i].n;
+		printf("%s - %d", words[i].word, words[i].n);
 		if (words[i].f != -1.0)
-			std::cout << " - " << words[i].f;
-		std::cout << "\n";
+			printf(" - %f", words[i].f);
+		printf("\n");
 	}
 }
