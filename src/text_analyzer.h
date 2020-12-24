@@ -8,10 +8,10 @@
 #define WORD_LENGTH 30
 
 // Функция добавляет символ в массив символов
-void add_symbol(struct Symbol*, unsigned int&, unsigned int&, char);
+void add_symbol(struct Symbol*, unsigned int*, unsigned int*, char);
 
 // Функция добавляет слово в массив слов
-void add_word(struct Word*, unsigned int&, unsigned int&, char*, unsigned int);
+void add_word(struct Word*, unsigned int*, unsigned int*, char*, unsigned int);
 
 // Функция анализирует текст из файла
 void analyze_text(const char*);
