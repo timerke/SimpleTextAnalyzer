@@ -25,7 +25,7 @@ void calculate_symbols_frequencies(struct Symbol*, unsigned int);
 
 // Функция вычисляет частоту слов
 void calculate_words_frequencies(struct Word*, unsigned int,
-	unsigned int n_words = 0);
+	unsigned int);
 
 // Функция вычисляет количество слов в тексте
 unsigned int calculate_words(struct Word*, unsigned int);

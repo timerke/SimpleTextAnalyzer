@@ -195,7 +195,7 @@ void analyze_text(const char* filename)
 	// Вычисляем полное количество слов
 	unsigned int total_words = calculate_words(words, n_words);
 	// Вычисляем частоту появления слов
-	calculate_words_frequencies(words, n_words);
+	calculate_words_frequencies(words, n_words, total_words);
 	// Выводим информацию
 	show_info(paragraphs, sentences, total_words, symbols, n_sym, words, n_words);
 	// Освобождаем память
@@ -228,11 +228,6 @@ void calculate_symbols_frequencies(struct Symbol* symbols, unsigned int n)
 void calculate_words_frequencies(struct Word* words, unsigned int n,
 	unsigned int n_words)
 {
-	if (n_words == 0)
-	{
-		// В функцию не было передано количество слов, вычисляем сами
-		n_words = calculate_words(words, n);
-	}
 	// Вычисляем частоту появляения слов в тексте
 	for (unsigned int i = 0; i < n; i++)
 		words[i].f = 1.0 * words[i].n / n_words;
