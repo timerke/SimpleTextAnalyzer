@@ -1,0 +1,9 @@
+language: c
+
+sudo: required
+
+script:
+- mkdir bin
+- mkdir -p build/src
+- mkdir -p build/test
+- make
