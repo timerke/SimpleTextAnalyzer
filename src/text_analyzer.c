@@ -296,7 +296,7 @@ void show_info(const char* filename, unsigned int paragraphs,
 	unsigned int n_s, struct Word* w, unsigned int n_w)
 {
 	FILE* file;
-	if (filename != nullptr)
+	if (filename != NULL)
 	{
 		file = fopen(filename, "w");
 		if (file == NULL)
