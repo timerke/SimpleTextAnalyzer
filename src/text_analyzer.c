@@ -3,8 +3,8 @@
 */
 
 #include <malloc.h>
-#include <stdio.h>
 #include <stdlib.h>
+#include "functions.h"
 #include "text_analyzer.h"
 
 
@@ -36,11 +36,7 @@ void add_symbol(struct Symbol** symbols, unsigned int* n_max, unsigned int* n,
 		size_t size = (*n_max) * sizeof(struct Symbol);
 		struct Symbol* new_symbols = (struct Symbol*)malloc(size);
 		for (unsigned int i = 0; i < (*n); i++)
-		{
-			new_symbols[i].s = (*symbols)[i].s;
-			new_symbols[i].f = (*symbols)[i].f;
-			new_symbols[i].n = (*symbols)[i].n;
-		}
+			new_symbols[i] = (*symbols)[i];
 		// Освобождаем память и получаем указатель на новую
 		free(*symbols);
 		*symbols = new_symbols;
@@ -94,14 +90,7 @@ void add_word(struct Word** words, unsigned int* n_words_max,
 		size_t size = (*n_words_max) * sizeof(struct Word);
 		struct Word* new_words = (struct Word*)malloc(size);
 		for (unsigned int i = 0; i < *n_words; i++)
-		{
-			for (unsigned int j = 0; j < (*words)[i].length; j++)
-				new_words[i].word[j] = (*words)[i].word[j];
-			if ((*words)[i].length < WORD_LENGTH)
-				new_words[i].word[(*words)[i].length] = '\0';
-			new_words[i].length = (*words)[i].length;
-			new_words[i].n = (*words)[i].n;
-		}
+			new_words[i] = (*words)[i];
 		// Освобождаем память и получаем указатель на новую
 		free(*words);
 		*words = new_words;
@@ -121,18 +110,22 @@ void add_word(struct Word** words, unsigned int* n_words_max,
 
 /**
  * Функция анализирует текст из файла.
- * @param filename: имя файла.
+ * @param filename_in: имя файла с текстом для анализа;
+ * @param filename_out: имя файла для записи результатов.
  */
-void analyze_text(const char* filename)
+void analyze_text(const char* filename_in, const char* filename_out)
 {
 	// Открываем файл с текстом
-	FILE* file = fopen(filename, "r");
+	FILE* file = fopen(filename_in, "r");
 	if (file == NULL)
+	{
 		// Не удалось открыть файл
+		printf("Файл '%s' открыть не удалось.\n", filename_in);
 		return;
+	}
 	// Файл открыть удалось
 	char c; // переменная для прочтенного символа из текста
-	char previous_c; // переменная для предыдущего символа
+	char previous_c = 0; // переменная для предыдущего символа
 	// Массив символов из текста
 	size_t size = N * sizeof(struct Symbol);
 	struct Symbol* symbols = (struct Symbol*)malloc(size);
@@ -186,7 +179,15 @@ void analyze_text(const char* filename)
 		}
 		previous_c = c;
 	}
-	if (is_new_paragraph)
+	// Продолжаем работу со словами
+	if (n != 0)
+	{
+		// Добавляем последнее слово
+		add_word(&words, &n_words_max, &n_words, word, n);
+		n = 0;
+	}
+	// Продолжаем работу с абзацами
+	if (is_new_paragraph && previous_c != 0)
 		paragraphs++;
 	// Закрываем файл
 	fclose(file);
@@ -196,8 +197,12 @@ void analyze_text(const char* filename)
 	unsigned int total_words = calculate_words(words, n_words);
 	// Вычисляем частоту появления слов
 	calculate_words_frequencies(words, n_words, total_words);
+	// Сортируем массивы символов и слов
+	sort_symbols(&symbols, 0, n_sym);
+	sort_words(&words, 0, n_words);
 	// Выводим информацию
-	show_info(paragraphs, sentences, total_words, symbols, n_sym, words, n_words);
+	show_info(filename_out, paragraphs, sentences, total_words, symbols, n_sym,
+		words, n_words);
 	// Освобождаем память
 	free(symbols);
 	free(words);
@@ -244,7 +249,7 @@ unsigned int calculate_words(struct Word* words, unsigned int n)
 	double total = 0;
 	for (unsigned int i = 0; i < n; i++)
 		total += words[i].n;
-	return total;
+	return (unsigned int)total;
 }
 
 /**
@@ -255,7 +260,8 @@ unsigned int calculate_words(struct Word* words, unsigned int n)
 bool check_delimiter(char c)
 {
 	if (c == ' ' || c == '\t' || c == '\n' || c == ',' || c == '.' || c == ';' ||
-		c == ':' || c == '(' || c == ')' || c == '/' || c == '\'' || c == '"')
+		c == ':' || c == '(' || c == ')' || c == '/' || c == '\'' || c == '"' ||
+		c == 0)
 		return true;
 	return false;
 }
@@ -276,6 +282,7 @@ bool check_space(char c)
 
 /**
  * Функция выводит на экран информацию об анализе текста.
+ * @param filename: имя файла для записи результатов;
  * @param paragraphs: количество абзацев;
  * @param sentences: количество предложений;
  * @param total_words: полное количество слов;
@@ -284,62 +291,78 @@ bool check_space(char c)
  * @param w: массив слов;
  * @param n_w: количество записанных элементов в массиве слов.
  */
-void show_info(unsigned int paragraphs, unsigned int sentences,
-	unsigned int total_words, struct Symbol* s, unsigned int n_s,
-	struct Word* w, unsigned int n_w)
+void show_info(const char* filename, unsigned int paragraphs,
+	unsigned int sentences, unsigned int total_words, struct Symbol* s,
+	unsigned int n_s, struct Word* w, unsigned int n_w)
 {
+	FILE* file;
+	if (filename != nullptr)
+	{
+		file = fopen(filename, "w");
+		if (file == NULL)
+		{
+			printf("Не удалось открыть файл '%s' для записи результатов.\n",
+				filename);
+			printf("Результаты будут выведены на экран.\n");
+			file = stdout;
+		}
+	}
+	else
+		file = stdout;
 	// Общая информация
-	printf("\nОбщая информация:\n");
-	printf("\tКоличество абзацев: %d.\n", paragraphs);
-	printf("\tКоличество предложений: %d.\n", sentences);
-	printf("\tКоличество слов: %d, среднее количество слов в предложении: %.3f.\n",
+	fprintf(file, "\nОбщая информация:\n");
+	fprintf(file, "\tКоличество абзацев: %d.\n", paragraphs);
+	fprintf(file, "\tКоличество предложений: %d.\n", sentences);
+	fprintf(file, "\tКоличество слов: %d, среднее количество слов в предложении: %.3f.\n",
 		total_words, 1.0 * total_words / sentences);
 	// Информация о символах
-	show_symbols(s, n_s);
+	show_symbols(file, s, n_s);
 	// Информация о словах
-	show_words(w, n_w);
+	show_words(file, w, n_w);
 }
 
 /**
  * Функция выводит на экран информацию о символах.
+ * @param file: указатель на файл, в который нужно записать результаты;
  * @param symbols: массив символов;
  * @param n: количество записанных элементов в массиве.
  */
-void show_symbols(struct Symbol* symbols, unsigned int n)
+void show_symbols(FILE* file, struct Symbol* symbols, unsigned int n)
 {
-	printf("\nСимволы из текста:\n");
-	printf("\tсимвол\tколичество\tчастота\n");
+	fprintf(file, "\nСимволы из текста:\n");
+	fprintf(file, "\tсимвол\tколичество\tчастота\n");
 	for (unsigned int i = 0; i < n; i++)
 	{
 		if (symbols[i].s == '\n')
-			printf("\t\\n");
+			fprintf(file, "\t\\n");
 		else if (symbols[i].s == '\t')
-			printf("\t\\t");
+			fprintf(file, "\t\\t");
 		else if (symbols[i].s == ' ')
-			printf("\t' '");
+			fprintf(file, "\t' '");
 		else
-			printf("\t%c", symbols[i].s);
-		printf("\t%d", symbols[i].n);
+			fprintf(file, "\t%c", symbols[i].s);
+		fprintf(file, "\t%d", symbols[i].n);
 		if (symbols[i].f != -1.0)
-			printf("\t%.4f", symbols[i].f);
-		printf("\n");
+			fprintf(file, "\t%.4f", symbols[i].f);
+		fprintf(file, "\n");
 	}
 }
 
 /**
  * Функция выводит на экран информацию о словах.
+ * @param file: указатель на файл, в который нужно записать результаты;
  * @param words: массив слов;
  * @param n: количество записанных элементов в массиве.
  */
-void show_words(struct Word* words, unsigned int n)
+void show_words(FILE* file, struct Word* words, unsigned int n)
 {
-	printf("\nСлова из текста:\n");
-	printf("\tслово\tколичество\tчастота\n");
+	fprintf(file, "\nСлова из текста:\n");
+	fprintf(file, "\tслово\tколичество\tчастота\n");
 	for (unsigned int i = 0; i < n; i++)
 	{
-		printf("\t%s\t%d", words[i].word, words[i].n);
+		fprintf(file, "\t%s\t%d", words[i].word, words[i].n);
 		if (words[i].f != -1.0)
-			printf("\t%.4f", words[i].f);
-		printf("\n");
+			fprintf(file, "\t%.4f", words[i].f);
+		fprintf(file, "\n");
 	}
 }
