@@ -34,7 +34,7 @@ int main(int argc, char** argv)
 		}
 		i++;
 	}
-	if (src_file == nullptr)
+	if (src_file == NULL)
 		// Если в командной строке не передано имя файла, задаем файл по умолчанию
 		src_file = (char*)"text1.txt";
 	// Анализируем текст
