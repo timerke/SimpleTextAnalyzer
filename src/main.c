@@ -12,8 +12,8 @@ int main(int argc, char** argv)
 	// результаты будут выведены на экран
 	const char IN[] = "-i";
 	const char OUT[] = "-o";
-	char* out_file = nullptr; // имя файла для записи результата
-	char* src_file = nullptr; // имя файла с текстом для анализа
+	char* out_file = NULL; // имя файла для записи результата
+	char* src_file = NULL; // имя файла с текстом для анализа
 	for (int i = 0; i < argc;)
 	{
 		if (compare_strings(argv[i], IN) && i < argc)
